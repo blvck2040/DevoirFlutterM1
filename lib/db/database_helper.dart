@@ -1,7 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../models/course.dart';
 import '../models/schedule.dart';
@@ -21,23 +20,9 @@ class DatabaseHelper {
     return _database!;
   }
 
-  Future<void> ensureInitialized() async {
-    await database;
-  }
-
   Future<Database> _initDatabase() async {
-    if (kIsWeb) {
-      databaseFactory = databaseFactoryFfiWeb;
-      return databaseFactory.openDatabase(
-        'university_schedule.db',
-        options: OpenDatabaseOptions(
-          version: 1,
-          onCreate: _onCreate,
-        ),
-      );
-    }
-
-    final path = join(await getDatabasesPath(), 'university_schedule.db');
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, 'university_schedule.db');
     return openDatabase(
       path,
       version: 1,

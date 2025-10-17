@@ -9,9 +9,8 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/schedule_screen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseHelper.instance.ensureInitialized();
   runApp(const UniversityScheduleApp());
 }
 
@@ -20,37 +19,41 @@ class UniversityScheduleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Emploi du temps',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F51B5)),
-        useMaterial3: true,
-      ),
-      initialRoute: LoginScreen.routeName,
-      routes: {
-        LoginScreen.routeName: (context) => const LoginScreen(),
-        RegisterScreen.routeName: (context) => const RegisterScreen(),
-        HomeScreen.routeName: (context) => const HomeScreen(),
-        CourseListScreen.routeName: (context) => const CourseListScreen(),
-        ScheduleScreen.routeName: (context) => const ScheduleScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == CourseDetailScreen.routeName) {
-          final arguments = settings.arguments;
-          if (arguments is Course) {
-            return MaterialPageRoute(
-              builder: (context) => CourseDetailScreen(course: arguments),
-            );
-          }
-          return MaterialPageRoute(
-            builder: (context) => const Scaffold(
-              body: Center(
-                child: Text('Aucun cours sélectionné.'),
-              ),
+    return FutureBuilder(
+      future: DatabaseHelper.instance.database,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const MaterialApp(
+            home: Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             ),
           );
         }
-        return null;
+
+        return MaterialApp(
+          title: 'Emploi du temps',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F51B5)),
+            useMaterial3: true,
+          ),
+          initialRoute: LoginScreen.routeName,
+          routes: {
+            LoginScreen.routeName: (context) => const LoginScreen(),
+            RegisterScreen.routeName: (context) => const RegisterScreen(),
+            HomeScreen.routeName: (context) => const HomeScreen(),
+            CourseListScreen.routeName: (context) => const CourseListScreen(),
+            ScheduleScreen.routeName: (context) => const ScheduleScreen(),
+          },
+          onGenerateRoute: (settings) {
+            if (settings.name == CourseDetailScreen.routeName) {
+              final course = settings.arguments as Course;
+              return MaterialPageRoute(
+                builder: (context) => CourseDetailScreen(course: course),
+              );
+            }
+            return null;
+          },
+        );
       },
     );
   }
